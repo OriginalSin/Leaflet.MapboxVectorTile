@@ -241,6 +241,11 @@ MVTFeature.prototype.deselect = function() {
   }
 };
 
+MVTFeature.prototype.redraw = function(style) {
+  this.style = style;
+  redrawTiles(this);
+};
+
 MVTFeature.prototype.on = function(eventType, callback) {
   this._eventHandlers[eventType] = callback;
 };

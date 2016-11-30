@@ -118,6 +118,7 @@ module.exports = L.TileLayer.MVTSource = L.TileLayer.Canvas.extend({
     };
 
     map.on('click', mapOnClickCallback);
+    map.on('mousemove', self._onMousemove, self);
 
     map.on("layerremove", function(e) {
       // check to see if the layer removed is this one
@@ -125,6 +126,7 @@ module.exports = L.TileLayer.MVTSource = L.TileLayer.Canvas.extend({
       if (e.layer._leaflet_id === self._leaflet_id && e.layer.removeChildLayers) {
         e.layer.removeChildLayers(map);
         map.off('click', mapOnClickCallback);
+        map.off('mousemove', self._onMousemove, self);
       }
     });
 
@@ -206,6 +208,9 @@ module.exports = L.TileLayer.MVTSource = L.TileLayer.Canvas.extend({
 
     var xhr = new XMLHttpRequest();
     xhr.onload = function() {
+      if (!self._map) {
+        return
+      }
       if (xhr.status == "200") {
 
         if(!xhr.response) return;
@@ -406,6 +411,42 @@ module.exports = L.TileLayer.MVTSource = L.TileLayer.Canvas.extend({
     } else {
       if (typeof onClick === 'function') {
         onClick(evt);
+      }
+    }
+
+  },
+  
+  _onMousemove: function(evt) {
+    //Here, pass the event on to the child MVTLayer and have it do the hit test and handle the result.
+    var self = this;
+    var onHover = self.options.onHover;
+    var hoveredLayers = self.options.hoveredLayers;
+    var layers = self.layers;
+
+    evt.tileID =  getTileURL(evt.latlng.lat, evt.latlng.lng, this.map.getZoom());
+
+    // We must have an array of hovered layers, otherwise, we just pass
+    // the event to the public onHover callback in options.
+
+    if(!hoveredLayers){
+      hoveredLayers = Object.keys(self.layers);
+    }
+
+    if (hoveredLayers && hoveredLayers.length > 0) {
+      for (var i = 0, len = hoveredLayers.length; i < len; i++) {
+        var key = hoveredLayers[i];
+        var layer = layers[key];
+        if (layer) {
+          layer.handleHoverEvent(evt, function(evt) {
+            if (typeof onHover === 'function') {
+              onHover(evt);
+            }
+          });
+        }
+      }
+    } else {
+      if (typeof onHover === 'function') {
+        onHover(evt);
       }
     }
 

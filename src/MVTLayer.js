@@ -286,6 +286,83 @@ module.exports = L.TileLayer.Canvas.extend({
     this.setHighestCount(count);
     this.setLowestCount(count);
   },
+  
+  //This is the old way.  It works, but is slow for mouseover events.  Fine for click events.
+  handleHoverEvent: function(evt, cb) {
+    //Click happened on the GroupLayer (Manager) and passed it here
+    var tileID = evt.tileID.split(":").slice(1, 3).join(":");
+    var zoom = evt.tileID.split(":")[0];
+    var canvas = this._tiles[tileID];
+    if(!canvas) {
+      //break out
+      cb(evt);
+      return;
+    }
+    var x = evt.layerPoint.x - canvas._leaflet_pos.x;
+    var y = evt.layerPoint.y - canvas._leaflet_pos.y;
+
+    var tilePoint = {x: x, y: y};
+    var features = this._canvasIDToFeatures[evt.tileID].features;
+
+    var minDistance = Number.POSITIVE_INFINITY;
+    var nearest = null;
+    var j, paths, distance;
+
+    for (var i = 0; i < features.length; i++) {
+      var feature = features[i];
+      switch (feature.type) {
+
+        case 1: //Point - currently rendered as circular paths.  Intersect with that.
+
+          //Find the radius of the point.
+          var radius = 3;
+          if (typeof feature.style.radius === 'function') {
+            radius = feature.style.radius(zoom); //Allows for scale dependent rednering
+          }
+          else{
+            radius = feature.style.radius;
+          }
+
+          paths = feature.getPathsForTile(evt.tileID);
+          for (j = 0; j < paths.length; j++) {
+            //Builds a circle of radius feature.style.radius (assuming circular point symbology).
+            if(in_circle(paths[j][0].x, paths[j][0].y, radius, x, y)){
+              nearest = feature;
+              minDistance = 0;
+            }
+          }
+          break;
+
+        case 2: //LineString
+          paths = feature.getPathsForTile(evt.tileID);
+          for (j = 0; j < paths.length; j++) {
+            if (feature.style) {
+              var distance = this._getDistanceFromLine(tilePoint, paths[j]);
+              var thickness = (feature.selected && feature.style.selected ? feature.style.selected.size : feature.style.size);
+              if (distance < thickness / 2 + this.options.lineClickTolerance && distance < minDistance) {
+                nearest = feature;
+                minDistance = distance;
+              }
+            }
+          }
+          break;
+
+        case 3: //Polygon
+          paths = feature.getPathsForTile(evt.tileID);
+          for (j = 0; j < paths.length; j++) {
+            if (this._isPointInPoly(tilePoint, paths[j])) {
+              nearest = feature;
+              minDistance = 0; // point is inside the polygon, so distance is zero
+            }
+          }
+          break;
+      }
+      if (minDistance == 0) break;
+    }
+
+    evt.feature = nearest;
+    cb(evt);
+  },
 
   //This is the old way.  It works, but is slow for mouseover events.  Fine for click events.
   handleClickEvent: function(evt, cb) {
