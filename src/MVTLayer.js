@@ -480,9 +480,16 @@ module.exports = L.TileLayer.Canvas.extend({
 
     //Get the features for this tile, and redraw them.
     var features = featfeats.features;
+    
+    var iterator = this.options.featureIteratorFactory(features)
+    var curFeature
+    
+    while (curFeature = iterator()) {
+      curFeature.draw(canvasID);
+    }
 
     // we want to skip drawing the selected features and draw them last
-    var selectedFeatures = [];
+    /*var selectedFeatures = [];
 
     // drawing all of the non-selected features
     for (var i = 0; i < features.length; i++) {
@@ -498,7 +505,7 @@ module.exports = L.TileLayer.Canvas.extend({
     for (var j = 0, len2 = selectedFeatures.length; j < len2; j++) {
       var selFeat = selectedFeatures[j];
       selFeat.draw(canvasID);
-    }
+    } */
   },
 
   _resetCanvasIDToFeatures: function(canvasID, canvas) {

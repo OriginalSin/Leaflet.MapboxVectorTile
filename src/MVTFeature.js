@@ -289,7 +289,8 @@ MVTFeature.prototype._drawPoint = function(ctx, coordsArray, style) {
   }
 
   ctx2d.restore();
-  tile.paths.push([p]);
+  // tile.paths.push([p]);
+  tile.paths = [[p]];
 };
 
 MVTFeature.prototype._drawLineString = function(ctx, coordsArray, style) {
@@ -318,7 +319,8 @@ MVTFeature.prototype._drawLineString = function(ctx, coordsArray, style) {
   ctx2d.stroke();
   ctx2d.restore();
 
-  tile.paths.push(projCoords);
+  // tile.paths.push(projCoords);
+  tile.paths = [projCoords];
 };
 
 MVTFeature.prototype._drawPolygon = function(ctx, coordsArray, style) {
@@ -367,7 +369,8 @@ MVTFeature.prototype._drawPolygon = function(ctx, coordsArray, style) {
     ctx2d.stroke();
   }
 
-  tile.paths.push(projCoords);
+  // tile.paths.push(projCoords);
+  tile.paths = [projCoords];
 
 };
 

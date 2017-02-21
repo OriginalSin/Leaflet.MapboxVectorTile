@@ -13,7 +13,31 @@ module.exports = L.TileLayer.MVTSource = L.TileLayer.Canvas.extend({
     getIDForLayerFeature: function() {},
     tileSize: 256,
     visibleLayers: [],
-    xhrHeaders: {}
+    xhrHeaders: {},
+    featureIteratorFactory: function(features) {
+      var state = 'main'; //main, selected
+      var selectedFeatures = [];
+      var idx = 0;
+      var f = null;
+      return function next() {
+        switch (state) {
+          case 'main':
+            if (idx === features.length) {
+              state = 'selected';
+              idx = 0;
+              return next()
+            }
+            if (features[idx].selected) {
+              selectedFeatures.push(features[idx++])
+              return next()
+            }
+            
+            return features[idx++]
+          case 'selected':
+            return selectedFeatures[idx++]
+        }
+      }
+    }
   },
   layers: {}, //Keep a list of the layers contained in the PBFs
   processedTiles: {}, //Keep a list of tiles that have been processed already
@@ -302,6 +326,7 @@ module.exports = L.TileLayer.MVTSource = L.TileLayer.Canvas.extend({
     }
 
     var options = {
+      featureIteratorFactory: self.options.featureIteratorFactory,
       getIDForLayerFeature: getIDForLayerFeature,
       filter: self.options.filter,
       layerOrdering: self.options.layerOrdering,
