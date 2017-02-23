@@ -203,6 +203,11 @@ module.exports = L.TileLayer.Canvas.extend({
 
         //create a new feature
         self.features[uniqueID] = mvtFeature = new MVTFeature(self, vtf, layerCtx, uniqueID, style);
+        
+        if (self.options.onNewFeature) {
+            self.options.onNewFeature(mvtFeature);
+        }
+        
         if (style && style.dynamicLabel && typeof style.dynamicLabel === 'function') {
           self.featuresWithLabels.push(mvtFeature);
         }

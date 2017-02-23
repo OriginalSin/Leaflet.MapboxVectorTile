@@ -330,6 +330,7 @@ module.exports = L.TileLayer.MVTSource = L.TileLayer.Canvas.extend({
       getIDForLayerFeature: getIDForLayerFeature,
       filter: self.options.filter,
       layerOrdering: self.options.layerOrdering,
+      onNewFeature: self.options.onNewFeature,
       style: self.style,
       name: key,
       asynch: true
