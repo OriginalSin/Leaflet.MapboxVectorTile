@@ -354,13 +354,16 @@ MVTFeature.prototype._drawPolygon = function(ctx, coordsArray, style) {
   for (var gidx = 0, len = coordsArray.length; gidx < len; gidx++) {
     var coords = coordsArray[gidx];
 
+    var projRing = [];
     for (var i = 0; i < coords.length; i++) {
       var coord = coords[i];
       var method = (i === 0 ? 'move' : 'line') + 'To';
       var proj = this._tilePoint(coords[i]);
-      projCoords.push(proj);
+      projRing.push(proj);
       ctx2d[method](proj.x, proj.y);
     }
+    
+    projCoords.push(projRing)
   }
 
   ctx2d.closePath();
@@ -370,7 +373,7 @@ MVTFeature.prototype._drawPolygon = function(ctx, coordsArray, style) {
   }
 
   // tile.paths.push(projCoords);
-  tile.paths = [projCoords];
+  tile.paths = projCoords;
 
 };
 

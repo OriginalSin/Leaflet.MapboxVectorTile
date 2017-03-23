@@ -17,7 +17,7 @@ module.exports = L.TileLayer.Canvas.extend({
 
   _featureIsClicked: {},
 
-  _isPointInPoly: function(pt, poly) {
+  _isPointInRing: function(pt, poly) {
     if(poly && poly.length) {
       for (var c = false, i = -1, l = poly.length, j = l - 1; ++i < l; j = i)
         ((poly[i].y <= pt.y && pt.y < poly[j].y) || (poly[j].y <= pt.y && pt.y < poly[i].y))
@@ -25,6 +25,16 @@ module.exports = L.TileLayer.Canvas.extend({
         && (c = !c);
       return c;
     }
+  },
+
+  _isOuterRing: function(poly) { 
+    var area = 0, j;
+    for (var i = 0; i < poly.length; i++) {
+        j = (i + 1) % poly.length;
+        area += poly[i].x * poly[j].y;
+        area -= poly[j].x * poly[i].y;
+    }
+    return area > 0;
   },
 
   _getDistanceFromLine: function(pt, pts) {
@@ -354,11 +364,21 @@ module.exports = L.TileLayer.Canvas.extend({
 
         case 3: //Polygon
           paths = feature.getPathsForTile(evt.tileID);
+          var inPoly = false,
+              inHole = false;
           for (j = 0; j < paths.length; j++) {
-            if (this._isPointInPoly(tilePoint, paths[j])) {
-              nearest = feature;
-              minDistance = 0; // point is inside the polygon, so distance is zero
+            if (this._isPointInRing(tilePoint, paths[j])) {
+              if (this._isOuterRing(paths[j])) {
+                inPoly = true;
+              } else {
+                inHole = true;
+                break;
+              }
             }
+          }
+          if (inPoly && !inHole) {
+            nearest = feature;
+            minDistance = 0; // point is inside the polygon, so distance is zero
           }
           break;
       }
@@ -431,11 +451,21 @@ module.exports = L.TileLayer.Canvas.extend({
 
         case 3: //Polygon
           paths = feature.getPathsForTile(evt.tileID);
+          var inPoly = false,
+              inHole = false;
           for (j = 0; j < paths.length; j++) {
-            if (this._isPointInPoly(tilePoint, paths[j])) {
-              nearest = feature;
-              minDistance = 0; // point is inside the polygon, so distance is zero
+            if (this._isPointInRing(tilePoint, paths[j])) {
+              if (this._isOuterRing(paths[j])) {
+                inPoly = true;
+              } else {
+                inHole = true;
+                break;
+              }
             }
+          }
+          if (inPoly && !inHole) {
+            nearest = feature;
+            minDistance = 0; // point is inside the polygon, so distance is zero
           }
           break;
       }
